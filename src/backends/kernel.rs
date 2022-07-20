@@ -17,11 +17,11 @@ impl<'a> From<&'a wireguard_control_sys::wg_allowedip> for AllowedIp {
     fn from(raw: &wireguard_control_sys::wg_allowedip) -> AllowedIp {
         let addr = match i32::from(raw.family) {
             libc::AF_INET => {
-                println!("allowed_ip [ipv4] {:#?}", raw.__bindgen_anon_1.ip4);
+                println!("allowed_ip [ipv4] {:#?}", unsafe { raw.__bindgen_anon_1.ip4 });
                 IpAddr::V4(unsafe { raw.__bindgen_anon_1.ip4.s_addr }.to_be().into())
             },
             libc::AF_INET6 => {
-                println!("allowed_ip [ipv6] {:#?}", raw.__bindgen_anon_1.ip6);
+                println!("allowed_ip [ipv6] {:#?}", unsafe { raw.__bindgen_anon_1.ip6 });
                 IpAddr::V6(unsafe { raw.__bindgen_anon_1.ip6.__in6_u.__u6_addr8 }.into())
             }
             _ => unreachable!(format!("Unsupported socket family {}!", raw.family)),
