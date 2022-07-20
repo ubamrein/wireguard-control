@@ -103,6 +103,7 @@ fn parse_peers(dev: &wireguard_control_sys::wg_device) -> Vec<PeerInfo> {
     if current_peer.is_null() {
         return result;
     }
+    println!("parsing peers");
 
     loop {
         let peer = unsafe { &*current_peer };
@@ -133,7 +134,8 @@ fn parse_allowed_ips(peer: &wireguard_control_sys::wg_peer) -> Vec<AllowedIp> {
 
         result.push(AllowedIp::from(ip));
 
-        if current_ip == peer.last_allowedip {
+        if current_ip == peer.last_allowedip
+        || peer.next_allowedip.is_null() {
             break;
         }
         current_ip = ip.next_allowedip;
@@ -397,6 +399,8 @@ pub fn get_by_name(name: &InterfaceName) -> Result<Device, io::Error> {
     if device.is_null() {
         return Err(io::Error::last_os_error());
     }
+
+    println!("try getting the device at {}", device);
 
     let result = if result == 0 {
         Ok(Device::from(unsafe { &*device }))
