@@ -16,8 +16,12 @@ use std::{
 impl<'a> From<&'a wireguard_control_sys::wg_allowedip> for AllowedIp {
     fn from(raw: &wireguard_control_sys::wg_allowedip) -> AllowedIp {
         let addr = match i32::from(raw.family) {
-            libc::AF_INET => IpAddr::V4(unsafe { raw.__bindgen_anon_1.ip4.s_addr }.to_be().into()),
+            libc::AF_INET => {
+                println!("allowed_ip [ipv4] {:#?}", raw.__bindgen_anon_1.ip4);
+                IpAddr::V4(unsafe { raw.__bindgen_anon_1.ip4.s_addr }.to_be().into())
+            },
             libc::AF_INET6 => {
+                println!("allowed_ip [ipv6] {:#?}", raw.__bindgen_anon_1.ip6);
                 IpAddr::V6(unsafe { raw.__bindgen_anon_1.ip6.__in6_u.__u6_addr8 }.into())
             }
             _ => unreachable!(format!("Unsupported socket family {}!", raw.family)),
@@ -106,7 +110,9 @@ fn parse_peers(dev: &wireguard_control_sys::wg_device) -> Vec<PeerInfo> {
     println!("parsing peers");
 
     loop {
+        println!("current_peer: {:#?}", current_peer);
         let peer = unsafe { &*current_peer };
+        println!("deref current_peer");
 
         result.push(PeerInfo::from(peer));
 
@@ -132,6 +138,7 @@ fn parse_allowed_ips(peer: &wireguard_control_sys::wg_peer) -> Vec<AllowedIp> {
     loop {
         println!("parsing ip {:#?}", current_ip);
         let ip = unsafe { &*current_ip };
+        println!("parsed ip");
 
         result.push(AllowedIp::from(ip));
 
