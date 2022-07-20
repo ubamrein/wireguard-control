@@ -17,11 +17,9 @@ impl<'a> From<&'a wireguard_control_sys::wg_allowedip> for AllowedIp {
     fn from(raw: &wireguard_control_sys::wg_allowedip) -> AllowedIp {
         let addr = match i32::from(raw.family) {
             libc::AF_INET => {
-                println!("allowed_ip [ipv4] {:#?}", unsafe { raw.__bindgen_anon_1.ip4 });
                 IpAddr::V4(unsafe { raw.__bindgen_anon_1.ip4.s_addr }.to_be().into())
             },
             libc::AF_INET6 => {
-                println!("allowed_ip [ipv6] {:#?}", unsafe { raw.__bindgen_anon_1.ip6 });
                 IpAddr::V6(unsafe { raw.__bindgen_anon_1.ip6.__in6_u.__u6_addr8 }.into())
             }
             _ => unreachable!(format!("Unsupported socket family {}!", raw.family)),
@@ -107,13 +105,9 @@ fn parse_peers(dev: &wireguard_control_sys::wg_device) -> Vec<PeerInfo> {
     if current_peer.is_null() {
         return result;
     }
-    println!("parsing peers");
 
     loop {
-        println!("current_peer: {:#?}", current_peer);
         let peer = unsafe { &*current_peer };
-        println!("deref current_peer");
-
         result.push(PeerInfo::from(peer));
 
         // sanity check to ensure we never dereference a null pointer
@@ -136,9 +130,7 @@ fn parse_allowed_ips(peer: &wireguard_control_sys::wg_peer) -> Vec<AllowedIp> {
     }
 
     loop {
-        println!("parsing ip {:#?}", current_ip);
         let ip = unsafe { &*current_ip };
-        println!("parsed ip");
 
         result.push(AllowedIp::from(ip));
 
@@ -153,11 +145,9 @@ fn parse_allowed_ips(peer: &wireguard_control_sys::wg_peer) -> Vec<AllowedIp> {
 }
 
 fn parse_endpoint(endpoint: &wireguard_control_sys::wg_peer__bindgen_ty_1) -> Option<SocketAddr> {
-    println!("parsing endpoint!");
     let addr = unsafe { endpoint.addr };
     match i32::from(addr.sa_family) {
         libc::AF_INET => {
-            println!("ipv4");
             let addr4 = unsafe { endpoint.addr4 };
             Some(SocketAddr::new(
                 IpAddr::V4(u32::from_be(addr4.sin_addr.s_addr).into()),
@@ -165,7 +155,6 @@ fn parse_endpoint(endpoint: &wireguard_control_sys::wg_peer__bindgen_ty_1) -> Op
             ))
         }
         libc::AF_INET6 => {
-            println!("ipv6");
             let addr6 = unsafe { endpoint.addr6 };
             let bytes = unsafe { addr6.sin6_addr.__in6_u.__u6_addr8 };
             Some(SocketAddr::new(
@@ -411,8 +400,6 @@ pub fn get_by_name(name: &InterfaceName) -> Result<Device, io::Error> {
         return Err(io::Error::last_os_error());
     }
 
-    println!("try getting the device at {:#?}", device);
-
     let result = if result == 0 {
         Ok(Device::from(unsafe { &*device }))
     } else {
@@ -478,7 +465,6 @@ impl Key {
     /// Generates a public key for this private key.
     pub fn generate_public(&self) -> Self {
         let mut public_key = wireguard_control_sys::wg_key::default();
-        println!("{:#?}",&self.0 as *const u8 as *mut u8);
         unsafe {
             wireguard_control_sys::wg_generate_public_key(
                 public_key.as_mut_ptr(),
