@@ -111,17 +111,13 @@ fn parse_peers(dev: &wireguard_control_sys::wg_device) -> Vec<PeerInfo> {
 
     loop {
         println!("current_peer: {:#?}", current_peer);
-        if current_peer.is_null() {
-            println!("why does this happen?");
-            break;
-        }
         let peer = unsafe { &*current_peer };
         println!("deref current_peer");
 
         result.push(PeerInfo::from(peer));
 
         // sanity check to ensure we never dereference a null pointer
-        if current_peer == dev.last_peer || dev.last_peer.is_null() {
+        if current_peer == dev.last_peer || peer.next_peer.is_null() {
             break;
         }
         current_peer = peer.next_peer;
