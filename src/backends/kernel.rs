@@ -130,6 +130,7 @@ fn parse_allowed_ips(peer: &wireguard_control_sys::wg_peer) -> Vec<AllowedIp> {
     }
 
     loop {
+        println!("parsing ip {:#?}", current_ip);
         let ip = unsafe { &*current_ip };
 
         result.push(AllowedIp::from(ip));
@@ -145,9 +146,11 @@ fn parse_allowed_ips(peer: &wireguard_control_sys::wg_peer) -> Vec<AllowedIp> {
 }
 
 fn parse_endpoint(endpoint: &wireguard_control_sys::wg_peer__bindgen_ty_1) -> Option<SocketAddr> {
+    println!("parsing endpoint!");
     let addr = unsafe { endpoint.addr };
     match i32::from(addr.sa_family) {
         libc::AF_INET => {
+            println!("ipv4");
             let addr4 = unsafe { endpoint.addr4 };
             Some(SocketAddr::new(
                 IpAddr::V4(u32::from_be(addr4.sin_addr.s_addr).into()),
@@ -155,6 +158,7 @@ fn parse_endpoint(endpoint: &wireguard_control_sys::wg_peer__bindgen_ty_1) -> Op
             ))
         }
         libc::AF_INET6 => {
+            println!("ipv6");
             let addr6 = unsafe { endpoint.addr6 };
             let bytes = unsafe { addr6.sin6_addr.__in6_u.__u6_addr8 };
             Some(SocketAddr::new(
@@ -467,7 +471,7 @@ impl Key {
     /// Generates a public key for this private key.
     pub fn generate_public(&self) -> Self {
         let mut public_key = wireguard_control_sys::wg_key::default();
-
+        println!("{:#?}",&self.0 as *const u8 as *mut u8);
         unsafe {
             wireguard_control_sys::wg_generate_public_key(
                 public_key.as_mut_ptr(),
