@@ -12,8 +12,8 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-static VAR_RUN_PATH: &str = "/var/run/wireguard";
-static RUN_PATH: &str = "/run/wireguard";
+static VAR_RUN_PATH: &str = "/data/var/run/wireguard";
+static RUN_PATH: &str = "/data/run/wireguard";
 
 fn get_base_folder() -> io::Result<PathBuf> {
     if Path::new(VAR_RUN_PATH).exists() {
